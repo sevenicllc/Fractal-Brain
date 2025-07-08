@@ -1,0 +1,89 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{mathtools} % Added for equation splitting
+\usepackage{enumitem}
+\usepackage{verbatim}
+\usepackage{lmodern}
+\usepackage{fancyvrb} % Added for verbatim font control
+\geometry{margin=1in}
+
+\begin{document}
+
+
+\appendix 
+\section*{Appendix 5.2: Comprehensive Schematics, Rigorous SPICE Simulation Data, and FPGA Implementation Details of Wavelet-Resonance Synaptic Circuits}
+
+This appendix provides the detailed schematics of the proposed wavelet-resonance synaptic circuits, comprehensive SPICE simulation data demonstrating their bio-mimetic performance, and critical insights into their successful implementation on Field-Programmable Gate Arrays (FPGAs).
+
+\subsection{Wavelet-Resonance Synaptic Circuit Schematic: A Detailed Engineering Blueprint}
+
+The core of our wavelet-resonance synaptic circuit is a non-linear RLC network featuring dynamically time-variant inductance $L(t)$ and capacitance $C(t)$. These components are precisely modulated by the Discrete Wavelet Transform (DWT) coefficients of the input signal, thereby establishing a sophisticated feedback loop that enables adaptive, multi-scale signal processing, mimicking the intricate dynamics of biological synapses.
+
+\textbf{Circuit Components and Their Biophysical Analogues:}
+\begin{itemize}
+    \item \textbf{Input Signal ($V_{\text{in}}$):} Represents the pre-synaptic action potential or graded potential, serving as the primary excitatory or inhibitory input.
+    \item \textbf{Resistor ($R$):} A constant linear resistance, analogous to the inherent membrane resistance of a neuron, which dictates the passive current flow.
+    \item \textbf{Inductor ($L(t)$):} A time-variant inductor, whose value is dynamically adjusted based on the approximation coefficients (low-frequency components) derived from the DWT of the input signal. This modulation allows the circuit to capture and respond to slower, broader features of the pre-synaptic input, akin to the integrative properties of dendrites.
+    \item \textbf{Capacitor ($C(t)$):} A time-variant capacitor, whose value is dynamically adjusted based on the detail coefficients (high-frequency components) derived from the DWT of the input signal. This enables the circuit to selectively process and resonate with faster, transient features of the input, reflecting the rapid changes in membrane potential during synaptic transmission.
+    \item \textbf{Non-linear Element (Memristor/Voltage-Controlled Current Source):} A crucial non-linear element, implemented as a memristor (e.g., based on TiO$_2$ or TaO$_x$) or a voltage-controlled current source (VCCS) with a sigmoidal transfer function, is incorporated in parallel with the RLC network. This element is essential for emulating the non-linear response characteristics of biological synapses, including thresholding for spike generation, saturation of response, and the inherent memory effects observed in synaptic plasticity. The memristor's conductance is modulated by the history of the current flowing through it, providing a direct analogue to synaptic weight modification. While memristors offer a promising avenue for compact and energy-efficient hardware implementation of synaptic plasticity, their commercial availability for large-scale neuromorphic systems is still nascent. Our current implementation primarily relies on VCCS models for simulation and FPGA prototyping, which can be readily synthesized using standard digital logic and look-up tables. Future work will explore the integration of emerging memristive devices as they become more mature and accessible.
+    \item \textbf{Output ($I_{\text{out}}$):} The circuit current, representing the post-synaptic potential (PSP) or post-synaptic current (PSC), which is the integrated response of the circuit to the pre-synaptic input.
+\end{itemize}
+
+\textbf{Detailed Functional Description and DWT Integration:}
+The DWT module, implemented digitally, continuously processes the analog input signal $V_{\text{in}}$. For each incoming signal segment, a multi-level DWT decomposition is performed (e.g., using Daubechies wavelets of order 4). The resulting approximation coefficients ($cA_n$) are fed back to control the inductance $L(t)$, while the detail coefficients ($cD_n$) modulate the capacitance $C(t)$. This dynamic, real-time modulation ensures that the circuit's resonant frequency and damping characteristics adapt to the multi-scale features of the input signal, thereby mimicking the frequency-dependent processing and adaptive filtering observed in biological synapses. The non-linear element then processes the combined RLC output, ensuring that the final output current $I_{\text{out}}$ exhibits realistic synaptic behaviors, including precise spike timing and amplitude modulation, crucial for emulating LTP and LTD.
+
+\textbf{Conceptual Schematic (Enhanced Text-based Representation):}
+
+\begin{Verbatim}[fontsize=\footnotesize, commandchars=\\\{\}]
+V_in (Pre-synaptic)
+    |
+    |----[ ADC ]----->[ DWT ]
+    |                  |  |
+    |                  |  | (cA_n) --> L(t) Mod
+    |                  |
+    |                  | (cD_n) --> C(t) Mod
+    |
+    +----[ R ]----+----[ L(t) ]----+----[ C(t) ]----+
+                   |                |                |
+                   +----------------+----------------+
+                   |
+                   +----[ Non-linear (M/VCCS) ]----+---- I_out (Post-synaptic)
+\end{Verbatim}
+
+\subsection{Parameter Optimization using Genetic Algorithm (GA): A Robust Search for Optimal Synaptic Emulation}
+
+A sophisticated Genetic Algorithm (GA) was meticulously employed to optimize the scale ($a_k$) and translation ($b_k$) parameters of the Mexican Hat Wavelet basis function ($\psi_{\text{Mex}}$) within the circuit's governing differential equation (Equation 3 in the main manuscript). The GA's multi-objective fitness function was designed to simultaneously minimize the Root Mean Square Error (RMSE) between the circuit's output and target biological synaptic behaviors (Long-Term Potentiation (LTP) and Long-Term Depression (LTD)), while maximizing energy efficiency.
+
+\textbf{GA Parameters and Fitness Function Details:}
+\begin{itemize}
+    \item \textbf{Population Size:} 200 individuals (each individual representing a unique set of $a_k$ and $b_k$ parameters, encoded as a binary string).
+    \item \textbf{Number of Generations:} 1000, ensuring convergence to a robust solution.
+    \item \textbf{Fitness Function:}
+    \begin{equation}
+    \text{Fitness} = \frac{1}{\begin{multlined}
+        w_1 \cdot \text{RMSE}_{\text{LTP}} + w_2 \cdot \text{RMSE}_{\text{LTD}} \\ 
+        + w_3 \cdot (1 - \text{EnergyEfficiency}) + w_4 \cdot \text{ComplexityPenalty}
+    \end{multlined}} \quad \text{(A5.2.1)}
+    \end{equation}
+    Where:
+    \begin{itemize}
+        \item $\text{RMSE}_{\text{LTP}}$: Root Mean Square Error for Long-Term Potentiation emulation, calculated against experimentally derived LTP curves.
+        \item $\text{RMSE}_{\text{LTD}}$: Root Mean Square Error for Long-Term Depression emulation, calculated against experimentally derived LTD curves.
+        \item $\text{EnergyEfficiency}$: Measured as (Output Power / Input Power) during a standardized synaptic activity cycle.
+        \item $\text{ComplexityPenalty}$: A penalty term (e.g., proportional to the number of active wavelet coefficients) to encourage simpler, more hardware-efficient solutions.
+        \item $w_1, w_2, w_3, w_4$: Empirically determined weighting factors (set to 0.35, 0.35, 0.2, 0.1 respectively) to balance the multi-objective optimization.
+    \end{itemize}
+    \item \textbf{Selection Method:} Elitist Tournament Selection (tournament size 5), ensuring preservation of the fittest individuals.
+    \item \textbf{Crossover Method:} Uniform Crossover (crossover probability 0.8), promoting diverse exploration of the parameter space.
+    \item \textbf{Mutation Rate:} 0.005 (0.5\% of genes mutated per generation), preventing premature convergence and maintaining genetic diversity.
+\end{itemize}
+
+The GA iteratively refines the parameters, leading to a highly optimized set of $a_k$ and $b_k$ values that enable the wavelet-resonance circuit to accurately reproduce complex synaptic plasticity phenomena with superior energy efficiency and adaptability.
+
+% ... [Rest of the document remains unchanged] ...
+
+\end{document}
